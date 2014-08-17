@@ -169,7 +169,7 @@ S punyDecode(S)(in S str)
 
 		i %= ret.length + 1;
 
-		ret.insertInPlace(i, n);
+		(() @trusted => ret.insertInPlace(i, n))();
 
 		i++;
 	}

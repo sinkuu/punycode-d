@@ -4,7 +4,6 @@
 module punycode;
 
 
-import core.checkedint;
 import std.algorithm;
 import std.array;
 import std.ascii;
@@ -51,10 +50,8 @@ S punyEncode(S)(S str)
 		dchar m = void;
 		while ((m = ms.front) < n) ms.popFront();
 
-		// delta += (m - n) * (handledLength + 1);
-		bool overflow; // moving this to outer scope causes wrong code generation with -O -inline?
-		delta = delta.addu((m - n) * (handledLength + 1), overflow);
-		enforce(!overflow, "Overflow occured");
+		enforce((m - n) * (handledLength + 1) <= uint.max - delta, "Overflow occured");
+		delta += (m - n) * (handledLength + 1);
 
 		n = m;
 
@@ -119,7 +116,7 @@ S punyDecode(S)(in S str)
 	auto dstr = str.to!dstring;
 	assert(dstr.length <= uint.max);
 
-	dstring ret;
+	dchar[] ret;
 
 	dchar n = initialN;
 	uint i = 0;
@@ -130,12 +127,11 @@ S punyDecode(S)(in S str)
 	if (delimIdx != -1)
 	{
 		enforce(dstr[0 .. delimIdx].all!isASCII, "Invalid Punycode");
-		ret = dstr[0 .. delimIdx];
+		ret = dstr[0 .. delimIdx].dup;
 	}
 
 	auto idx = (delimIdx == -1 || delimIdx == 0) ? 0 : delimIdx + 1;
 
-	bool overflow;
 	while (idx < dstr.length)
 	{
 		immutable oldi = i;
@@ -148,24 +144,23 @@ S punyDecode(S)(in S str)
 			immutable digit = decodeDigit(dstr[idx]);
 			idx++;
 
-			i = i.addu(digit * w, overflow);
-			enforce(!overflow, "Overflow occured");
+			enforce(digit * w <= uint.max - i, "Overflow occured");
+			i += digit * w;
 
 			immutable t = k <= bias ? tmin :
 				k >= bias + tmax ? tmax : k - bias;
 			if (digit < t) break;
 
-			w = w.mulu(base - t, overflow);
-			enforce(!overflow, "Overflow occured");
+			enforce(w <= uint.max / (base - t), "Overflow occured");
+			w *= base - t;
 		}
 
 		enforce(ret.length < uint.max-1, "Overflow occured");
 
 		bias = adaptBias(i - oldi, cast(uint) ret.length + 1, oldi == 0);
 
-		// n += i / (ret.length + 1);
-		n = n.addu(i / (ret.length + 1), overflow);
-		enforce(!overflow, "Overflow occured");
+		enforce(i / (ret.length + 1) <= uint.max - n, "Overflow occured");
+		n += i / (ret.length + 1);
 
 		i %= ret.length + 1;
 

@@ -1,0 +1,6 @@
+{
+	"name": "punycode",
+	"description": "Punycode converter",
+	"authors": ["sinkuu"],
+	"license": "MIT"
+}

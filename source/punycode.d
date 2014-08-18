@@ -193,8 +193,10 @@ unittest
 		assertConvertible("", "");
 		assertConvertible("ASCII0123", "ASCII0123-");
 		assertConvertible("Punycodeぴゅにこーど", "Punycode-p73grhua1i6jv5d");
-		assertConvertible("ぴゅにこーど"w, "28j1be9azfq9a"w);
-		assertConvertible("他们为什么不说中文"d, "ihqwcrb4cv8a8dqg056pqjye"d);
+		assertConvertible("Punycodeぴゅにこーど"w, "Punycode-p73grhua1i6jv5d"w);
+		assertConvertible("Punycodeぴゅにこーど"d, "Punycode-p73grhua1i6jv5d"d);
+		assertConvertible("ぴゅにこーど", "28j1be9azfq9a");
+		assertConvertible("他们为什么不说中文", "ihqwcrb4cv8a8dqg056pqjye");
 		assertConvertible("☃-⌘", "--dqo34k");
 		assertConvertible("-> $1.00 <-", "-> $1.00 <--");
 		assertThrown(punyDecode("aaa-*"));

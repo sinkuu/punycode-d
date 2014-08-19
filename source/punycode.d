@@ -185,8 +185,8 @@ unittest
 {
 	static void assertConvertible(S)(S plain, S punycode)
 	{
-		assert(punyEncode(plain) == punycode, "punyEncode");
-		assert(punyDecode(punycode) == plain, "punyDecode");
+		assert(punyEncode(plain) == punycode);
+		assert(punyDecode(punycode) == plain);
 	}
 
 	assertCTFEable!({

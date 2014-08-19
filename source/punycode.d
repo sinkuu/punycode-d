@@ -110,7 +110,7 @@ S punyDecode(S)(in S str)
 		if (c.isUpper) return c - 'A';
 		if (c.isLower) return c - 'a';
 		if (c.isDigit) return c - '0' + 26;
-		throw new InvalidPunycodeException(null);
+		throw new InvalidPunycodeException("Invalid Punycode");
 	}
 
 	auto dstr = str.to!dstring;
@@ -126,7 +126,7 @@ S punyDecode(S)(in S str)
 	immutable delimIdx = dstr.lastIndexOf('-');
 	if (delimIdx != -1)
 	{
-		enforceEx!InvalidPunycodeException(dstr[0 .. delimIdx].all!isASCII);
+		enforceEx!InvalidPunycodeException(dstr[0 .. delimIdx].all!isASCII, "Invalid Punycode");
 		ret = dstr[0 .. delimIdx].dup;
 	}
 

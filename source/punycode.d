@@ -50,7 +50,7 @@ S punyEncode(S)(S str)
 		dchar m = void;
 		while ((m = ms.front) < n) ms.popFront();
 
-		enforce((m - n) * (handledLength + 1) <= uint.max - delta, "Overflow occured");
+		enforceEx!PunycodeException((m - n) * (handledLength + 1) <= uint.max - delta, "Arithmetic overflow");
 		delta += (m - n) * (handledLength + 1);
 
 		n = m;
@@ -59,7 +59,7 @@ S punyEncode(S)(S str)
 		{
 			if (c < n)
 			{
-				enforce(delta != uint.max, "Overflow occured");
+				enforceEx!PunycodeException(delta != uint.max, "Arithmetic overflow");
 				delta++;
 			}
 			else if (c == n)
@@ -110,7 +110,7 @@ S punyDecode(S)(in S str)
 		if (c.isUpper) return c - 'A';
 		if (c.isLower) return c - 'a';
 		if (c.isDigit) return c - '0' + 26;
-		throw new Exception("Invalid Punycode");
+		throw new InvalidPunycodeException(null);
 	}
 
 	auto dstr = str.to!dstring;
@@ -126,7 +126,7 @@ S punyDecode(S)(in S str)
 	immutable delimIdx = dstr.lastIndexOf('-');
 	if (delimIdx != -1)
 	{
-		enforce(dstr[0 .. delimIdx].all!isASCII, "Invalid Punycode");
+		enforceEx!InvalidPunycodeException(dstr[0 .. delimIdx].all!isASCII);
 		ret = dstr[0 .. delimIdx].dup;
 	}
 
@@ -139,27 +139,27 @@ S punyDecode(S)(in S str)
 
 		for (auto k = base;;k += base)
 		{
-			enforce(idx < dstr.length, "Invalid Punycode");
+			enforceEx!InvalidPunycodeException(idx < dstr.length);
 
 			immutable digit = decodeDigit(dstr[idx]);
 			idx++;
 
-			enforce(digit * w <= uint.max - i, "Overflow occured");
+			enforceEx!PunycodeException(digit * w <= uint.max - i, "Arithmetic overflow");
 			i += digit * w;
 
 			immutable t = k <= bias ? tmin :
 				k >= bias + tmax ? tmax : k - bias;
 			if (digit < t) break;
 
-			enforce(w <= uint.max / (base - t), "Overflow occured");
+			enforceEx!PunycodeException(w <= uint.max / (base - t), "Arithmetic overflow");
 			w *= base - t;
 		}
 
-		enforce(ret.length < uint.max-1, "Overflow occured");
+		enforceEx!PunycodeException(ret.length < uint.max-1, "Arithmetic overflow");
 
 		bias = adaptBias(i - oldi, cast(uint) ret.length + 1, oldi == 0);
 
-		enforce(i / (ret.length + 1) <= uint.max - n, "Overflow occured");
+		enforceEx!PunycodeException(i / (ret.length + 1) <= uint.max - n, "Arithmetic overflow");
 		n += i / (ret.length + 1);
 
 		i %= ret.length + 1;
@@ -173,14 +173,14 @@ S punyDecode(S)(in S str)
 }
 
 ///
-/+pure+/ @safe
+@safe /+pure+/
 unittest
 {
 	assert(punyDecode("maana-pta") == "mañana");
 }
 
 
-/+pure+/ @safe
+@safe /+pure+/
 unittest
 {
 	static void assertConvertible(S)(S plain, S punycode)
@@ -199,9 +199,35 @@ unittest
 		assertConvertible("他们为什么不说中文", "ihqwcrb4cv8a8dqg056pqjye");
 		assertConvertible("☃-⌘", "--dqo34k");
 		assertConvertible("-> $1.00 <-", "-> $1.00 <--");
-		assertThrown(punyDecode("aaa-*"));
-		assertThrown(punyDecode("aaa-p73grhua1i6jv5dd"));
+		assertThrown!InvalidPunycodeException(punyDecode("aaa-*"));
+		assertThrown!InvalidPunycodeException(punyDecode("aaa-p73grhua1i6jv5dd"));
+		assertThrown!InvalidPunycodeException(punyDecode("ü-"));
+		assert(collectExceptionMsg(punyDecode("aaa-99999999")) == "Arithmetic overflow");
 	});
+}
+
+
+/**
+	Exception thrown by punycode module.
+  */
+class PunycodeException : Exception
+{
+	this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable next = null)
+		@safe pure nothrow
+	{
+		super(msg, file, line, next);
+	}
+}
+
+
+/// ditto
+class InvalidPunycodeException : PunycodeException
+{
+	this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable next = null)
+		@safe pure nothrow
+	{
+		super(msg, file, line, next);
+	}
 }
 
 
@@ -216,7 +242,8 @@ enum tmax = 26;
 enum damp = 700;
 enum skew = 38;
 
-uint adaptBias(uint delta, uint numpoints, bool firsttime) pure @safe nothrow /+@nogc+/
+
+uint adaptBias(uint delta, uint numpoints, bool firsttime) @safe pure nothrow /+@nogc+/
 {
 	delta = firsttime ? delta / damp : delta / 2;
 	delta += delta / numpoints;

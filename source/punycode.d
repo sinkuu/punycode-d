@@ -1,5 +1,7 @@
 /**
-	Punycode converter.
+	Punycode converter. This module is based on the original implementation in RFC 3492, and the JavaScript implementation by Mathias Bynens.
+
+	License: MIT
 */
 module punycode;
 
@@ -14,6 +16,12 @@ import std.traits;
 
 /**
 	Converts an UTF string to a Punycode string.
+
+	Throws:
+		PunycodeException if an internal error occured.
+
+	Standards:
+		$(LINK2 https://www.ietf.org/rfc/rfc3492.txt, RFC 3492)
 */
 S punyEncode(S)(S str)
 	if (isSomeString!S)
@@ -101,6 +109,14 @@ unittest
 
 /**
 	Converts a Punycode string to an UTF string.
+
+	Throws:
+		PunycodeException if an internal error occured.
+
+		InvalidPunycodeException if an invalid Punycode string was passed.
+
+	Standards:
+		$(LINK2 https://www.ietf.org/rfc/rfc3492.txt, RFC 3492)
 */
 S punyDecode(S)(in S str)
 	if (isSomeString!S)

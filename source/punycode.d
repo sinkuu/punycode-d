@@ -36,7 +36,6 @@ S punyEncode(S)(S str)
 	auto dstr = str.to!dstring;
 
 	auto ret = appender!S;
-
 	ret ~= dstr.filter!isASCII;
 	assert(ret.data.length <= uint.max);
 
@@ -100,7 +99,7 @@ S punyEncode(S)(S str)
 }
 
 ///
-/+pure+/ @safe
+@safe pure
 unittest
 {
 	assert(punyEncode("mañana") == "maana-pta");
@@ -189,14 +188,14 @@ S punyDecode(S)(in S str)
 }
 
 ///
-@safe /+pure+/
+@safe pure
 unittest
 {
 	assert(punyDecode("maana-pta") == "mañana");
 }
 
 
-@safe /+pure+/
+@safe pure
 unittest
 {
 	static void assertConvertible(S)(S plain, S punycode)

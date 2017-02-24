@@ -2,6 +2,6 @@
 	"name": "punycode",
 	"description": "Punycode converter",
 	"authors": ["sinkuu"],
-	"license": "MIT",
+	"license": "BSL-1.0",
 	"targetType": "library"
 }

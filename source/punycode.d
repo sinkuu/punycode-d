@@ -1,7 +1,7 @@
 /**
 	Punycode converter. This module is based on the original implementation in RFC 3492, and the JavaScript implementation by Mathias Bynens.
 
-	License: MIT
+	License: Boost Software License 1.0
 */
 module punycode;
 
